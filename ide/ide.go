@@ -350,6 +350,10 @@ func (i *Ide) getFolderDisplayName() string {
 	return filepath.Base(i.currentFolder)
 }
 
+func (i *Ide) getFileIcon(uid string) fyne.Resource {
+	return GetFileIcon(uid)
+}
+
 func (i *Ide) loadFolderContents() {
 	if i.currentFolder == "" {
 		i.treeData = make(map[string][]string)

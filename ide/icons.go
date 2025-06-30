@@ -1,7 +1,7 @@
 package ide
 
 import (
-	"os"
+	"embed"
 	"path/filepath"
 	"strings"
 
@@ -9,133 +9,76 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// loadIconFromFile loads an icon from the icons folder
-func (i *Ide) loadIconFromFile(iconName string) fyne.Resource {
-	// Try different icon variants in order of preference
-	variants := []string{
-		iconName + "-original-wordmark.svg",
-		iconName + "-original.svg",
-		iconName + "-plain.svg",
-		iconName + "-line.svg",
-		iconName + ".svg",
-	}
+//go:embed icons/*.svg
+var iconFS embed.FS
 
-	for _, variant := range variants {
-		iconPath := filepath.Join("icons", iconName, variant)
-		if _, err := os.Stat(iconPath); err == nil {
-			// Try reading the file and creating a resource
-			data, err := os.ReadFile(iconPath)
-			if err == nil {
-				resource := fyne.NewStaticResource(variant, data)
-				return resource
-			} else {
-				// Could not read file
-			}
-		}
-	}
+// FileIconMap maps file extensions to their corresponding SVG icon resource
+var FileIconMap map[string]fyne.Resource
 
-	// Fallback to theme icon
-	return theme.DocumentIcon()
+func init() {
+	FileIconMap = make(map[string]fyne.Resource)
+
+	// Initialize file extension to icon mappings
+	FileIconMap[".go"] = loadIcon("go.svg")
+	FileIconMap[".py"] = loadIcon("python.svg")
+	FileIconMap[".js"] = loadIcon("javascript.svg")
+	FileIconMap[".ts"] = loadIcon("typescript.svg")
+	FileIconMap[".jsx"] = loadIcon("react.svg")
+	FileIconMap[".tsx"] = loadIcon("react.svg")
+	FileIconMap[".html"] = loadIcon("html5.svg")
+	FileIconMap[".css"] = loadIcon("css3.svg")
+	FileIconMap[".json"] = loadIcon("json.svg")
+	FileIconMap[".xml"] = loadIcon("xml.svg")
+	FileIconMap[".yaml"] = loadIcon("yaml.svg")
+	FileIconMap[".yml"] = loadIcon("yaml.svg")
+	FileIconMap[".md"] = loadIcon("markdown.svg")
+	FileIconMap[".java"] = loadIcon("java.svg")
+	FileIconMap[".c"] = loadIcon("c.svg")
+	FileIconMap[".cpp"] = loadIcon("cplusplus.svg")
+	FileIconMap[".cs"] = loadIcon("csharp.svg")
+	FileIconMap[".sh"] = loadIcon("bash.svg")
+	FileIconMap[".rb"] = loadIcon("ruby.svg")
+	FileIconMap[".rs"] = loadIcon("rust.svg")
+	FileIconMap[".kt"] = loadIcon("kotlin.svg")
+	FileIconMap[".lua"] = loadIcon("lua.svg")
+	FileIconMap[".dockerfile"] = loadIcon("docker.svg")
+	FileIconMap[".svelte"] = loadIcon("svelte.svg")
+	FileIconMap[".vue"] = loadIcon("vuejs.svg")
+	FileIconMap[".dart"] = loadIcon("flutter.svg")
+	FileIconMap[".gradle"] = loadIcon("gradle.svg")
+	FileIconMap[".gitignore"] = loadIcon("git.svg")
 }
 
-// getFileIcon returns appropriate icon based on file extension and filename
-func (i *Ide) getFileIcon(filePath string) fyne.Resource {
+// loadIcon loads an SVG icon from the embedded filesystem
+func loadIcon(name string) fyne.Resource {
+	data, err := iconFS.ReadFile("icons/" + name)
+	if err != nil {
+		return theme.FileIcon()
+	}
+
+	resource := fyne.NewStaticResource(name, data)
+	return resource
+}
+
+// GetFileIcon returns the appropriate icon for a file based on its extension
+func GetFileIcon(filePath string) fyne.Resource {
 	ext := strings.ToLower(filepath.Ext(filePath))
-	filename := strings.ToLower(filepath.Base(filePath))
 
-	// Handle special filenames first
-	switch filename {
-	case "dockerfile", "dockerfile.dev", "dockerfile.prod":
-		return i.loadIconFromFile("docker")
-	case ".gitignore", ".gitattributes", ".gitmodules":
-		return i.loadIconFromFile("git")
-	case "package.json", "package-lock.json":
-		return i.loadIconFromFile("nodejs")
-	case "cargo.toml", "cargo.lock":
-		return i.loadIconFromFile("rust")
-	case "go.mod", "go.sum":
-		return i.loadIconFromFile("go")
-	case "requirements.txt", "pyproject.toml":
-		return i.loadIconFromFile("python")
-	case "pom.xml":
-		return i.loadIconFromFile("java")
-	case "composer.json", "composer.lock":
-		return i.loadIconFromFile("php")
-	case "yarn.lock":
-		return i.loadIconFromFile("yarn")
-	case "readme.md", "readme":
-		return i.loadIconFromFile("markdown")
-	case "makefile":
-		return i.loadIconFromFile("cmake")
-	case "webpack.config.js", "webpack.config.ts":
-		return i.loadIconFromFile("webpack")
-	case "vite.config.js", "vite.config.ts":
-		return i.loadIconFromFile("vite")
-	case "tsconfig.json":
-		return i.loadIconFromFile("typescript")
+	// Special case for Dockerfile which doesn't have an extension
+	if strings.ToLower(filepath.Base(filePath)) == "dockerfile" {
+		return FileIconMap[".dockerfile"]
 	}
 
-	// Handle file extensions
-	switch ext {
-	case ".ts":
-		return i.loadIconFromFile("typescript")
-	case ".js":
-		return i.loadIconFromFile("javascript")
-	case ".jsx":
-		return i.loadIconFromFile("react")
-	case ".tsx":
-		return i.loadIconFromFile("react")
-	case ".vue":
-		return i.loadIconFromFile("vuejs")
-	case ".go":
-		return i.loadIconFromFile("go")
-	case ".py":
-		return i.loadIconFromFile("python")
-	case ".java":
-		return i.loadIconFromFile("java")
-	case ".c":
-		return i.loadIconFromFile("c")
-	case ".cpp", ".cc", ".cxx", ".c++":
-		return i.loadIconFromFile("cplusplus")
-	case ".cs":
-		return i.loadIconFromFile("csharp")
-	case ".php":
-		return i.loadIconFromFile("php")
-	case ".rb":
-		return i.loadIconFromFile("ruby")
-	case ".rs":
-		return i.loadIconFromFile("rust")
-	case ".swift":
-		return i.loadIconFromFile("swift")
-	case ".kt", ".kts":
-		return i.loadIconFromFile("kotlin")
-	case ".dart":
-		return i.loadIconFromFile("dart")
-	case ".html", ".htm":
-		return i.loadIconFromFile("html5")
-	case ".css":
-		return i.loadIconFromFile("css3")
-	case ".scss", ".sass":
-		return i.loadIconFromFile("sass")
-	case ".less":
-		return i.loadIconFromFile("less")
-	case ".json":
-		return i.loadIconFromFile("json")
-	case ".xml":
-		return i.loadIconFromFile("xml")
-	case ".yaml", ".yml":
-		return i.loadIconFromFile("yaml")
-	case ".md":
-		return i.loadIconFromFile("markdown")
-	case ".sql":
-		return i.loadIconFromFile("mysql")
-	case ".sh", ".bash":
-		return i.loadIconFromFile("bash")
-	case ".ps1":
-		return i.loadIconFromFile("powershell")
-	case ".dockerfile":
-		return i.loadIconFromFile("docker")
-	default:
-		return theme.DocumentIcon()
+	// Special case for .gitignore
+	if strings.ToLower(filepath.Base(filePath)) == ".gitignore" {
+		return FileIconMap[".gitignore"]
 	}
+
+	// Check if we have a specific icon for this extension
+	if icon, ok := FileIconMap[ext]; ok {
+		return icon
+	}
+
+	// Default to standard file icon
+	return theme.FileIcon()
 }
