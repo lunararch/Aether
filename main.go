@@ -8,5 +8,4 @@ func main() {
 
 	window := ide.NewIde()
 	window.Run()
-	return
 }

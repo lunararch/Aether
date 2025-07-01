@@ -35,6 +35,8 @@ func NewIde() *Ide {
 	myWindow.Resize(fyne.NewSize(1200, 800))
 	myWindow.CenterOnScreen()
 
+	LazyLoadIcons()
+
 	return &Ide{
 		app:    aether,
 		window: myWindow,
